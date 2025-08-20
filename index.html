@@ -3304,30 +3304,36 @@
                 this.drawCustomCursor();
             }
             
-            gameLoop() {
+            let lastTime = 0;
+            
+            gameLoop(timestamp) {
+                if (!lastTime) lastTime = timestamp;  
+                const deltaTime = (timestamp - lastTime) / 1000; // em segundos
+                lastTime = timestamp;
+            
                 if (this.gameStarted && !this.gameOver) {
-                    this.updatePlayer();
-                    this.updateEnemies();
-                    this.updateBullets();
-                    this.updateEnemyBullets();
-                    this.updateClickEffect();
-                    
-                    // Spawn de inimigos
-                    this.enemySpawnTimer++;
+                    this.updatePlayer(deltaTime);
+                    this.updateEnemies(deltaTime);
+                    this.updateBullets(deltaTime);
+                    this.updateEnemyBullets(deltaTime);
+                    this.updateClickEffect(deltaTime);
+            
+                    // Spawn de inimigos (agora baseado em tempo, não em frames)
+                    this.enemySpawnTimer += deltaTime;
                     if (this.enemySpawnTimer >= this.enemySpawnRate) {
                         this.spawnEnemy();
                         this.enemySpawnTimer = 0;
-                        
-                        // Aumentar dificuldade gradualmente (spawn rate)
-                        if (this.enemySpawnRate > 60) {
-                            this.enemySpawnRate -= 0.2;
+            
+                        // Diminui o intervalo de spawn gradualmente
+                        if (this.enemySpawnRate > 1) { 
+                            this.enemySpawnRate -= 0.05; 
                         }
                     }
                 }
-                
-                this.render();
-                requestAnimationFrame(() => this.gameLoop());
+            
+                requestAnimationFrame(this.gameLoop.bind(this));
             }
+
         }
         
         // Inicializar o sistema de dark mode
