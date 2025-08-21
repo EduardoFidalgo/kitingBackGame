@@ -663,12 +663,12 @@
         }
     </style>
 </head>
-<body>
-    <button class="dark-mode-toggle" id="darkModeToggle">🌙</button>
+<body class="dark-mode">
+    <button class="dark-mode-toggle" id="darkModeToggle">☀️</button>
     
     <!-- Guia dos Inimigos -->
     <div class="enemies-guide" id="enemiesGuide">
-        <h3>📖 Guia dos Inimigos</h3>
+        <h3>Guia dos Inimigos</h3>
         <div class="enemies-list">
             <div class="enemy-card">
                 <div class="enemy-image">
@@ -682,7 +682,7 @@
                     <img src="tank.png" alt="Tank" />
                 </div>
                 <div class="enemy-name">TANK</div>
-                <div class="enemy-description">Muito resistente<br>Lento</div>
+                <div class="enemy-description">Muito resistente<br>Se cansa rápido</div>
             </div>
             <div class="enemy-card">
                 <div class="enemy-image">
@@ -817,8 +817,9 @@
                 this.darkModeToggle = document.getElementById('darkModeToggle');
                 this.body = document.body;
                 
-                // Carregar preferência salva
-                this.isDarkMode = localStorage.getItem('darkMode') === 'true';
+                // Carregar preferência salva - dark mode como padrão
+                const savedMode = localStorage.getItem('darkMode');
+                this.isDarkMode = savedMode !== null ? savedMode === 'true' : true;
                 
                 // Aplicar tema inicial
                 this.applyTheme();
