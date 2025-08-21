@@ -693,6 +693,13 @@
             </div>
             <div class="enemy-card">
                 <div class="enemy-image">
+                    <img src="berserker.png" alt="Berserker" />
+                </div>
+                <div class="enemy-name">BERSERKER</div>
+                <div class="enemy-description">Fúria selvagem<br>Velocidade extrema</div>
+            </div>
+            <div class="enemy-card">
+                <div class="enemy-image">
                     <img src="mage.png" alt="Mage" />
                 </div>
                 <div class="enemy-name">MAGE</div>
@@ -957,11 +964,16 @@
                     this.enemyImagesLoaded.sniper = true;
                 };
                 
+                // Imagem do berserker
+                this.enemyImages.berserker = new Image();
+                this.enemyImages.berserker.src = 'berserker.png';
+                this.enemyImagesLoaded.berserker = false;
+                this.enemyImages.berserker.onload = () => {
+                    this.enemyImagesLoaded.berserker = true;
+                };
+                
                 // Para outros tipos, usar a imagem do mago como fallback
-                this.enemyImages.berserker = this.enemyImages.basic;
                 this.enemyImages.elite = this.enemyImages.basic;
-                this.enemyImagesLoaded.berserker = this.enemyImagesLoaded.basic;
-                this.enemyImagesLoaded.berserker = this.enemyImagesLoaded.basic;
                 this.enemyImagesLoaded.elite = this.enemyImagesLoaded.basic;
                 
                 this.enemies = [];
