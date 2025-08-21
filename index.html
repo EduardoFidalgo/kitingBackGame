@@ -13,12 +13,13 @@
                 url('backgroundLight.png') center/cover no-repeat;
             font-family: 'Arial', sans-serif;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             overflow: hidden;
             transition: background-image 0.5s ease-in-out;
-            gap: 20px;
+            gap: 15px;
         }
 
         body.dark-mode {
@@ -32,6 +33,122 @@
             gap: 20px;
             align-items: center;
             justify-content: center;
+        }
+
+        .enemies-guide {
+            background: rgba(0, 0, 0, 0.85);
+            border: 2px solid #4a90e2;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+            max-width: 800px;
+            width: 100%;
+            display: none; /* Oculto inicialmente */
+            transition: all 0.5s ease;
+        }
+
+        .enemies-guide h3 {
+            color: #4a90e2;
+            text-align: center;
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            text-shadow: 0 0 5px rgba(74, 144, 226, 0.5);
+        }
+
+        .enemies-list {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .enemy-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            min-width: 120px;
+            transition: all 0.3s ease;
+        }
+
+        .enemy-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(74, 144, 226, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(74, 144, 226, 0.2);
+        }
+
+        .enemy-image {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .enemy-image img {
+            width: 30px;
+            height: 30px;
+            object-fit: contain;
+            filter: brightness(1.1);
+        }
+
+        .enemy-name {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 12px;
+            margin-bottom: 3px;
+            text-align: center;
+        }
+
+        .enemy-description {
+            color: #cccccc;
+            font-size: 10px;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        @media (max-width: 768px) {
+            .enemies-guide {
+                padding: 10px;
+                margin-bottom: 5px;
+            }
+            
+            .enemies-list {
+                gap: 10px;
+            }
+            
+            .enemy-card {
+                min-width: 80px;
+                padding: 8px;
+            }
+            
+            .enemy-image {
+                width: 30px;
+                height: 30px;
+            }
+            
+            .enemy-image img {
+                width: 20px;
+                height: 20px;
+            }
+            
+            .enemy-name {
+                font-size: 10px;
+            }
+            
+            .enemy-description {
+                font-size: 9px;
+            }
         }
 
         .game-container {
@@ -549,6 +666,41 @@
 <body>
     <button class="dark-mode-toggle" id="darkModeToggle">🌙</button>
     
+    <!-- Guia dos Inimigos -->
+    <div class="enemies-guide" id="enemiesGuide">
+        <h3>📖 Guia dos Inimigos</h3>
+        <div class="enemies-list">
+            <div class="enemy-card">
+                <div class="enemy-image">
+                    <img src="fast.png" alt="Fast" />
+                </div>
+                <div class="enemy-name">FAST</div>
+                <div class="enemy-description">Rápido e ágil<br>Baixa vida</div>
+            </div>
+            <div class="enemy-card">
+                <div class="enemy-image">
+                    <img src="tank.png" alt="Tank" />
+                </div>
+                <div class="enemy-name">TANK</div>
+                <div class="enemy-description">Muito resistente<br>Lento</div>
+            </div>
+            <div class="enemy-card">
+                <div class="enemy-image">
+                    <img src="sniper.png" alt="Sniper" />
+                </div>
+                <div class="enemy-name">SNIPER</div>
+                <div class="enemy-description">Ataque à distância<br>Velocidade média</div>
+            </div>
+            <div class="enemy-card">
+                <div class="enemy-image">
+                    <img src="mage.png" alt="Mage" />
+                </div>
+                <div class="enemy-name">MAGE</div>
+                <div class="enemy-description">Tiros múltiplos<br>Poder mágico</div>
+            </div>
+        </div>
+    </div>
+    
     <div class="game-layout">
         <!-- Tela de Boas-vindas -->
         <div class="welcome-screen" id="welcomeScreen">
@@ -648,6 +800,17 @@
     </div>
 
     <script>
+        // Polyfill para requestAnimationFrame (compatibilidade com Chrome antigo)
+        if (!window.requestAnimationFrame) {
+            window.requestAnimationFrame = window.webkitRequestAnimationFrame || 
+                                         window.mozRequestAnimationFrame || 
+                                         window.oRequestAnimationFrame || 
+                                         window.msRequestAnimationFrame || 
+                                         function(callback) {
+                                             return window.setTimeout(callback, 1000 / 60);
+                                         };
+        }
+        
         // Sistema de Dark Mode
         class DarkModeManager {
             constructor() {
@@ -712,6 +875,7 @@
                 this.welcomeScreen = document.getElementById('welcomeScreen');
                 this.nicknameInput = document.getElementById('nicknameInput');
                 this.startGameButton = document.getElementById('startGameButton');
+                this.enemiesGuide = document.getElementById('enemiesGuide');
                 
                 this.gameStarted = false;
                 this.gameOver = false;
@@ -731,6 +895,7 @@
                     isMoving: false,
                     isShooting: false,
                     shootTarget: null,
+                    moveTarget: null, // Inimigo que o jogador quer atacar (para seguir)
                     shootCooldown: 0,
                     maxShootCooldown: 20, // 20 frames = ~0.33 segundos
                     shootRange: 250, // Range de tiro em pixels
@@ -738,7 +903,13 @@
                     maxHealth: 3,
                     color: '#4CAF50',
                     trail: [],
-                    angle: 0 // Ângulo de rotação do personagem
+                    angle: 0, // Ângulo de rotação do personagem
+                    // Sistema de stamina para tiros
+                    stamina: 100,
+                    maxStamina: 100,
+                    staminaRegenRate: 1.67, // 100/60 = 1.67 por frame para regenerar em 1s
+                    staminaCostPerShot: 100, // Custo total da stamina por tiro
+                    canShoot: true
                 };
                 
                 // Carregar imagem do personagem
@@ -796,9 +967,11 @@
                 this.bullets = [];
                 this.enemyBullets = []; // Balas dos inimigos
                 this.enemySpawnTimer = 0;
-                this.enemySpawnRate = 180; // Spawn a cada 3 segundos (mais lento)
+                this.enemySpawnRate = 180; // Spawn a cada 3 segundos (180 frames em 60fps)
                 this.maxEnemiesOnScreen = 3; // Máximo de inimigos na tela
                 this.killsForUpgrade = 4; // Kills necessários para aumentar spawn
+                this.lastTime = 0; // Para controle de deltaTime no gameLoop
+                this.frameTimeAccumulator = 0; // Para sistema de FPS fixo
                 
                 this.clickEffect = {
                     x: 0,
@@ -1049,6 +1222,7 @@
                 this.uiOverlay.style.display = 'block';
                 this.instructionsPanel.style.display = 'block';
                 this.instructions.style.display = 'none';
+                this.enemiesGuide.style.display = 'block'; // Mostrar guia dos inimigos
                 this.statusElement.textContent = 'Jogo iniciado!';
                 this.scoreElement.textContent = '0';
                 this.enemyCountElement.textContent = '0';
@@ -1067,74 +1241,145 @@
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
                 
-                // Verificar se clicou em um inimigo (hitbox aumentado)
-                let enemyClicked = false;
-                for (let i = this.enemies.length - 1; i >= 0; i--) {
+                // FASE 1: Procurar inimigos próximos ao clique (PRIORIDADE MÁXIMA)
+                let clickedEnemy = null;
+                let closestEnemyDistance = Infinity;
+                
+                // Buscar o inimigo mais próximo ao clique (área generosa)
+                for (let i = 0; i < this.enemies.length; i++) {
                     const enemy = this.enemies[i];
-                    const distance = Math.sqrt((x - enemy.x) ** 2 + (y - enemy.y) ** 2);
                     
-                    // Hitbox aumentado para facilitar o clique
-                    if (distance <= enemy.size + 10) {
-                        // Verificar se está dentro do range de tiro
-                        const shootDistance = Math.sqrt((this.player.x - enemy.x) ** 2 + (this.player.y - enemy.y) ** 2);
+                    // Cache das propriedades da imagem
+                    const enemyImage = this.enemyImages[enemy.type];
+                    const imageLoaded = this.enemyImagesLoaded[enemy.type];
+                    
+                    let isWithinClickArea = false;
+                    
+                    if (enemyImage && imageLoaded) {
+                        // Área de clique generosa baseada na imagem
+                        const imageSize = enemy.size * 2;
+                        const halfSize = imageSize / 2;
+                        const clickMargin = 25; // Área bem generosa para priorizar inimigos
                         
-                        if (shootDistance <= this.player.shootRange) {
-                            // Parar movimento e mirar no inimigo
-                            this.player.isMoving = false;
-                            this.player.isShooting = true;
-                            this.player.shootTarget = enemy;
-                            
-                            // Calcular ângulo de rotação para o inimigo
-                            const dx = enemy.x - this.player.x;
-                            const dy = enemy.y - this.player.y;
-                            this.player.angle = Math.atan2(dy, dx);
-                            
-                            // Efeito de mira
-                            this.clickEffect.x = enemy.x;
-                            this.clickEffect.y = enemy.y;
-                            this.clickEffect.radius = 0;
-                            this.clickEffect.active = true;
-                            this.clickEffect.alpha = 1;
-                            
-                            this.statusElement.textContent = 'Atirando...';
-                        } else {
-                            // Inimigo fora do range
-                            this.statusElement.textContent = 'Inimigo fora do alcance!';
-                            
-                            // Efeito visual indicando fora do range
-                            this.clickEffect.x = enemy.x;
-                            this.clickEffect.y = enemy.y;
-                            this.clickEffect.radius = 0;
-                            this.clickEffect.active = true;
-                            this.clickEffect.alpha = 1;
+                        const relativeX = x - enemy.x;
+                        const relativeY = y - enemy.y;
+                        const distanceSquared = relativeX * relativeX + relativeY * relativeY;
+                        const boundarySquared = (halfSize + clickMargin) * (halfSize + clickMargin);
+                        isWithinClickArea = distanceSquared <= boundarySquared;
+                    } else {
+                        // Fallback: área circular generosa
+                        const dx = x - enemy.x;
+                        const dy = y - enemy.y;
+                        const distanceSquared = dx * dx + dy * dy;
+                        const boundarySquared = (enemy.size + 30) * (enemy.size + 30);
+                        isWithinClickArea = distanceSquared <= boundarySquared;
+                    }
+                    
+                    if (isWithinClickArea) {
+                        const clickDistance = Math.sqrt((x - enemy.x) * (x - enemy.x) + (y - enemy.y) * (y - enemy.y));
+                        if (clickDistance < closestEnemyDistance) {
+                            closestEnemyDistance = clickDistance;
+                            clickedEnemy = enemy;
                         }
-                        enemyClicked = true;
-                        break;
                     }
                 }
                 
-                // Se não clicou em inimigo, mover personagem
-                if (!enemyClicked) {
-                    this.player.targetX = x;
-                    this.player.targetY = y;
-                    this.player.isMoving = true;
-                    this.player.isShooting = false;
-                    this.player.shootTarget = null;
+                // FASE 2: Se encontrou inimigo, processar interação
+                if (clickedEnemy) {
+                    const enemy = clickedEnemy;
                     
-                    // Calcular ângulo de rotação do personagem
-                    const dx = x - this.player.x;
-                    const dy = y - this.player.y;
-                    this.player.angle = Math.atan2(dy, dx);
+                    // Verificar se o inimigo tem a propriedade clickEffect (segurança)
+                    if (!enemy.clickEffect) {
+                        enemy.clickEffect = {
+                            active: false,
+                            timer: 0,
+                            maxTimer: 30,
+                            duration: 30
+                        };
+                    }
                     
-                    // Efeito de clique de movimento
-                    this.clickEffect.x = x;
-                    this.clickEffect.y = y;
-                    this.clickEffect.radius = 0;
-                    this.clickEffect.active = true;
-                    this.clickEffect.alpha = 1;
+                    // Ativar efeito visual instantaneamente
+                    enemy.clickEffect.active = true;
+                    enemy.clickEffect.timer = enemy.clickEffect.maxTimer;
                     
-                    this.statusElement.textContent = 'Movendo...';
+                    // Calcular distância do player ao inimigo
+                    const dx = this.player.x - enemy.x;
+                    const dy = this.player.y - enemy.y;
+                    const shootDistanceSquared = dx * dx + dy * dy;
+                    const shootRangeSquared = this.player.shootRange * this.player.shootRange;
+                    
+                    if (shootDistanceSquared <= shootRangeSquared) {
+                        // CASO A: Inimigo dentro do range - atirar imediatamente
+                        this.player.isMoving = false;
+                        this.player.isShooting = true;
+                        this.player.shootTarget = enemy;
+                        this.player.moveTarget = null; // Cancelar movimento
+                        
+                        // Calcular ângulo para o inimigo
+                        this.player.angle = Math.atan2(-dy, -dx);
+                        
+                        // Efeito de mira
+                        this.clickEffect.x = enemy.x;
+                        this.clickEffect.y = enemy.y;
+                        this.clickEffect.radius = 0;
+                        this.clickEffect.active = true;
+                        this.clickEffect.alpha = 1;
+                        
+                        this.statusElement.textContent = 'Atirando no inimigo!';
+                    } else {
+                        // CASO B: Inimigo fora do range - mover para atacar
+                        this.player.isShooting = false;
+                        this.player.shootTarget = null;
+                        this.player.isMoving = true;
+                        this.player.moveTarget = enemy; // Seguir o inimigo
+                        
+                        // Calcular posição ideal para atacar (um pouco antes do range máximo)
+                        const optimalDistance = this.player.shootRange * 0.8; // 80% do range máximo
+                        const currentDistance = Math.sqrt(shootDistanceSquared);
+                        const ratio = optimalDistance / currentDistance;
+                        
+                        this.player.targetX = enemy.x + (dx * ratio);
+                        this.player.targetY = enemy.y + (dy * ratio);
+                        
+                        // Calcular ângulo de movimento
+                        const moveDx = this.player.targetX - this.player.x;
+                        const moveDy = this.player.targetY - this.player.y;
+                        this.player.angle = Math.atan2(moveDy, moveDx);
+                        
+                        // Efeito visual indicando movimento para atacar
+                        this.clickEffect.x = enemy.x;
+                        this.clickEffect.y = enemy.y;
+                        this.clickEffect.radius = 0;
+                        this.clickEffect.active = true;
+                        this.clickEffect.alpha = 1;
+                        
+                        this.statusElement.textContent = 'Movendo para atacar inimigo!';
+                    }
+                    
+                    return; // Inimigo sempre tem prioridade - não processar movimento normal
                 }
+                
+                // FASE 3: Se não clicou em inimigo, movimento normal
+                this.player.targetX = x;
+                this.player.targetY = y;
+                this.player.isMoving = true;
+                this.player.isShooting = false;
+                this.player.shootTarget = null;
+                this.player.moveTarget = null;
+                
+                // Calcular ângulo de rotação do personagem
+                const dx = x - this.player.x;
+                const dy = y - this.player.y;
+                this.player.angle = Math.atan2(dy, dx);
+                
+                // Efeito de clique de movimento
+                this.clickEffect.x = x;
+                this.clickEffect.y = y;
+                this.clickEffect.radius = 0;
+                this.clickEffect.active = true;
+                this.clickEffect.alpha = 1;
+                
+                this.statusElement.textContent = 'Movendo...';
             }
             
             updateMousePosition(e) {
@@ -1171,8 +1416,55 @@
                     this.player.shootCooldown--;
                 }
                 
+                // Sistema de stamina - regeneração contínua
+                if (this.player.stamina < this.player.maxStamina) {
+                    this.player.stamina = Math.min(
+                        this.player.maxStamina, 
+                        this.player.stamina + this.player.staminaRegenRate
+                    );
+                }
+                
+                // Atualizar status de tiro baseado na stamina
+                this.player.canShoot = this.player.stamina >= this.player.staminaCostPerShot;
+                
+                // SISTEMA DE SEGUIMENTO DE INIMIGO (nova funcionalidade)
+                if (this.player.moveTarget && this.enemies.includes(this.player.moveTarget)) {
+                    const enemy = this.player.moveTarget;
+                    const dx = this.player.x - enemy.x;
+                    const dy = this.player.y - enemy.y;
+                    const distanceToEnemy = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Verificar se chegou no range de tiro
+                    if (distanceToEnemy <= this.player.shootRange * 0.9) {
+                        // Chegou próximo o suficiente - começar a atirar
+                        this.player.isMoving = false;
+                        this.player.isShooting = true;
+                        this.player.shootTarget = enemy;
+                        this.player.moveTarget = null;
+                        
+                        // Ajustar ângulo para o inimigo
+                        this.player.angle = Math.atan2(-dy, -dx);
+                        this.statusElement.textContent = 'Atirando no inimigo!';
+                    } else {
+                        // Ainda precisa se aproximar - atualizar posição alvo
+                        const optimalDistance = this.player.shootRange * 0.8;
+                        const ratio = optimalDistance / distanceToEnemy;
+                        
+                        this.player.targetX = enemy.x + (dx * ratio);
+                        this.player.targetY = enemy.y + (dy * ratio);
+                        this.player.isMoving = true;
+                        this.statusElement.textContent = 'Perseguindo inimigo...';
+                    }
+                } else if (this.player.moveTarget) {
+                    // Inimigo alvo não existe mais - parar seguimento
+                    this.player.moveTarget = null;
+                    this.player.isMoving = false;
+                    this.statusElement.textContent = 'Alvo perdido';
+                }
+                
                 // Sistema de tiro
-                if (this.player.isShooting && this.player.shootTarget && this.player.shootCooldown === 0) {
+                if (this.player.isShooting && this.player.shootTarget && 
+                    this.player.shootCooldown === 0 && this.player.canShoot) {
                     // Verificar se o alvo ainda existe e está no range
                     if (this.enemies.includes(this.player.shootTarget)) {
                         const distance = Math.sqrt(
@@ -1183,11 +1475,21 @@
                         if (distance <= this.player.shootRange) {
                             this.shootBullet(this.player.shootTarget);
                             this.player.shootCooldown = this.player.maxShootCooldown;
+                            
+                            // Consumir stamina
+                            this.player.stamina = Math.max(0, this.player.stamina - this.player.staminaCostPerShot);
+                            this.player.canShoot = false; // Forçar espera pela regeneração
+                            
+                            // Manter ângulo apontado para o inimigo
+                            const dx = this.player.shootTarget.x - this.player.x;
+                            const dy = this.player.shootTarget.y - this.player.y;
+                            this.player.angle = Math.atan2(dy, dx);
                         } else {
-                            // Alvo fora do range, parar de atirar
+                            // Alvo fora do range - tentar seguir novamente
                             this.player.isShooting = false;
                             this.player.shootTarget = null;
-                            this.statusElement.textContent = 'Alvo fora do alcance!';
+                            this.player.moveTarget = this.player.shootTarget; // Voltar a seguir
+                            this.statusElement.textContent = 'Inimigo fugiu - perseguindo...';
                         }
                     } else {
                         // Alvo não existe mais, parar de atirar
@@ -1195,6 +1497,9 @@
                         this.player.shootTarget = null;
                         this.statusElement.textContent = 'Parado';
                     }
+                } else if (this.player.isShooting && this.player.shootTarget && !this.player.canShoot) {
+                    // Quer atirar mas não tem stamina
+                    this.statusElement.textContent = 'Carregando tiro...';
                 }
                 
                 // Sistema de movimento (só move se não estiver atirando)
@@ -1590,7 +1895,13 @@
                     patrolAngle: Math.random() * Math.PI * 2,
                     rushCooldown: 0,
                     specialAbilityCooldown: 0,
-                    angle: 0 // Ângulo para apontar para o jogador
+                    angle: 0, // Ângulo para apontar para o jogador
+                    clickEffect: {
+                        active: false,
+                        timer: 0,
+                        maxTimer: 30, // 30 frames = 0.5 segundos
+                        duration: 30
+                    }
                 };
                 
                 switch (type) {
@@ -1708,6 +2019,14 @@
                     if (enemy.rushCooldown > 0) enemy.rushCooldown--;
                     if (enemy.specialAbilityCooldown > 0) enemy.specialAbilityCooldown--;
                     if (enemy.burstCooldown > 0) enemy.burstCooldown--;
+                    
+                    // Atualizar efeito de clique
+                    if (enemy.clickEffect && enemy.clickEffect.timer > 0) {
+                        enemy.clickEffect.timer--;
+                        if (enemy.clickEffect.timer <= 0) {
+                            enemy.clickEffect.active = false;
+                        }
+                    }
                     
                     // Calcular distância para o jogador
                     const distanceToPlayer = Math.sqrt(
@@ -2053,6 +2372,7 @@
                 this.uiOverlay.style.display = 'none';
                 this.instructionsPanel.style.display = 'none';
                 this.instructions.style.display = 'none';
+                this.enemiesGuide.style.display = 'none'; // Ocultar guia dos inimigos
             }
             
             createGameOverExplosion() {
@@ -2316,6 +2636,9 @@
                 this.ctx.lineWidth = 1;
                 this.ctx.strokeRect(barX, barY, barWidth, barHeight);
                 
+                // Barra de stamina do jogador
+                this.drawPlayerStaminaBar();
+                
                 // Círculo de range de tiro
                 this.ctx.shadowColor = 'transparent';
                 this.ctx.beginPath();
@@ -2375,6 +2698,75 @@
                     this.ctx.strokeStyle = isDarkMode ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.5)';
                     this.ctx.lineWidth = 1;
                     this.ctx.strokeText(this.playerNickname, this.player.x, this.player.y - this.player.size - 25);
+                }
+                
+                this.ctx.restore();
+            }
+            
+            drawPlayerStaminaBar() {
+                const barWidth = 50;
+                const barHeight = 6;
+                const barX = this.player.x - barWidth / 2;
+                const barY = this.player.y - this.player.size - 45; // Acima da barra de vida
+                
+                this.ctx.save();
+                
+                // Fundo da barra de stamina
+                this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                this.ctx.fillRect(barX, barY, barWidth, barHeight);
+                
+                // Barra de stamina - cor baseada no nível
+                const staminaPercent = this.player.stamina / this.player.maxStamina;
+                let staminaColor;
+                
+                if (staminaPercent >= 1.0) {
+                    staminaColor = '#00ff00'; // Verde quando cheia
+                } else if (staminaPercent >= 0.5) {
+                    staminaColor = '#ffff00'; // Amarelo quando média
+                } else {
+                    staminaColor = '#ff4444'; // Vermelho quando baixa
+                }
+                
+                // Efeito de brilho quando pronta para atirar
+                if (this.player.canShoot) {
+                    this.ctx.shadowColor = staminaColor;
+                    this.ctx.shadowBlur = 8;
+                    this.ctx.shadowOffsetX = 0;
+                    this.ctx.shadowOffsetY = 0;
+                }
+                
+                this.ctx.fillStyle = staminaColor;
+                this.ctx.fillRect(barX, barY, barWidth * staminaPercent, barHeight);
+                
+                // Borda da barra
+                this.ctx.shadowColor = 'transparent';
+                this.ctx.strokeStyle = 'white';
+                this.ctx.lineWidth = 1;
+                this.ctx.strokeRect(barX, barY, barWidth, barHeight);
+                
+                // Indicador visual quando não pode atirar
+                if (!this.player.canShoot && this.player.isShooting) {
+                    // Piscar vermelho quando tentando atirar sem stamina
+                    const flash = Math.sin(Date.now() * 0.01) * 0.5 + 0.5;
+                    this.ctx.strokeStyle = `rgba(255, 0, 0, ${flash})`;
+                    this.ctx.lineWidth = 2;
+                    this.ctx.strokeRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2);
+                }
+                
+                // Texto de status da stamina (pequeno)
+                this.ctx.font = '10px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillStyle = 'white';
+                this.ctx.strokeStyle = 'black';
+                this.ctx.lineWidth = 2;
+                
+                if (this.player.canShoot) {
+                    this.ctx.strokeText('PRONTO', this.player.x, barY - 3);
+                    this.ctx.fillText('PRONTO', this.player.x, barY - 3);
+                } else {
+                    const timeLeft = ((this.player.maxStamina - this.player.stamina) / this.player.staminaRegenRate / 60).toFixed(1);
+                    this.ctx.strokeText(`${timeLeft}s`, this.player.x, barY - 3);
+                    this.ctx.fillText(`${timeLeft}s`, this.player.x, barY - 3);
                 }
                 
                 this.ctx.restore();
@@ -2461,6 +2853,53 @@
                     
                     // Indicador de range de tiro do inimigo
                     this.drawEnemyRangeIndicator(enemy);
+                    
+                    // Efeito visual de click - contorno vermelho piscante
+                    if (enemy.clickEffect && enemy.clickEffect.timer > 0) {
+                        this.ctx.save();
+                        
+                        // Calcular intensidade do flash baseado no tempo restante
+                        const flashIntensity = Math.sin((enemy.clickEffect.timer / enemy.clickEffect.duration) * Math.PI * 8) * 0.5 + 0.5;
+                        const alpha = flashIntensity * (enemy.clickEffect.timer / enemy.clickEffect.duration);
+                        
+                        this.ctx.globalAlpha = alpha;
+                        this.ctx.strokeStyle = '#ff0000'; // Vermelho
+                        this.ctx.lineWidth = 1; // Linha bem fina
+                        this.ctx.shadowColor = '#ff0000';
+                        this.ctx.shadowBlur = 3; // Sombra muito sutil
+                        
+                        // Verificar se a imagem está carregada para fazer contorno preciso
+                        const clickEnemyImage = this.enemyImages[enemy.type];
+                        const clickImageLoaded = this.enemyImagesLoaded[enemy.type];
+                        
+                        if (clickEnemyImage && clickImageLoaded) {
+                            // Contorno seguindo o formato da imagem - apenas 1 contorno fino
+                            const imageSize = enemy.size * 2;
+                            const halfSize = imageSize / 2;
+                            const margin = 5; // Margem pequena
+                            
+                            // Desenhar apenas um contorno fino
+                            this.ctx.strokeRect(
+                                enemy.x - halfSize - margin,
+                                enemy.y - halfSize - margin,
+                                imageSize + (margin * 2),
+                                imageSize + (margin * 2)
+                            );
+                            
+                            // Contorno circular sutil
+                            this.ctx.globalAlpha = alpha * 0.3;
+                            this.ctx.beginPath();
+                            this.ctx.arc(enemy.x, enemy.y, halfSize + 6, 0, Math.PI * 2);
+                            this.ctx.stroke();
+                        } else {
+                            // Fallback: contorno circular fino se a imagem não carregou
+                            this.ctx.beginPath();
+                            this.ctx.arc(enemy.x, enemy.y, enemy.size + 6, 0, Math.PI * 2);
+                            this.ctx.stroke();
+                        }
+                        
+                        this.ctx.restore();
+                    }
                     
                     // Hitbox do inimigo (área clicável) - quase transparente
                     this.ctx.save();
@@ -3304,33 +3743,47 @@
                 this.drawCustomCursor();
             }
             
-            let lastTime = 0;
-            
-            gameLoop(timestamp) {
-                if (!lastTime) lastTime = timestamp;  
-                const deltaTime = (timestamp - lastTime) / 1000; // em segundos
-                this.lastTime = timestamp;
-            
-                if (this.gameStarted && !this.gameOver) {
-                    this.updatePlayer(deltaTime);
-                    this.updateEnemies(deltaTime);
-                    this.updateBullets(deltaTime);
-                    this.updateEnemyBullets(deltaTime);
-                    this.updateClickEffect(deltaTime);
-            
-                    // Spawn de inimigos (agora baseado em tempo, não em frames)
-                    this.enemySpawnTimer += deltaTime;
-                    if (this.enemySpawnTimer >= this.enemySpawnRate) {
-                        this.spawnEnemy();
-                        this.enemySpawnTimer = 0;
-            
-                        // Diminui o intervalo de spawn gradualmente
-                        if (this.enemySpawnRate > 1) { 
-                            this.enemySpawnRate -= 0.05; 
+            gameLoop(timestamp = 0) {
+                // Sistema de FPS fixo para compatibilidade com Chrome
+                const targetFPS = 60;
+                const targetFrameTime = 1000 / targetFPS;
+                
+                if (!this.lastTime) this.lastTime = timestamp;
+                const deltaTime = timestamp - this.lastTime;
+                
+                // Acumular tempo para manter FPS constante
+                this.frameTimeAccumulator = (this.frameTimeAccumulator || 0) + deltaTime;
+                
+                if (this.frameTimeAccumulator >= targetFrameTime) {
+                    // Processar atualizações apenas quando necessário
+                    if (this.gameStarted && !this.gameOver) {
+                        this.updatePlayer();
+                        this.updateEnemies();
+                        this.updateBullets();
+                        this.updateEnemyBullets();
+                        this.updateClickEffect();
+                
+                        // Spawn de inimigos baseado em frames
+                        this.enemySpawnTimer++;
+                        if (this.enemySpawnTimer >= this.enemySpawnRate) {
+                            this.spawnEnemy();
+                            this.enemySpawnTimer = 0;
+                
+                            // Diminui o intervalo de spawn gradualmente
+                            if (this.enemySpawnRate > 60) { // 1 segundo em 60fps
+                                this.enemySpawnRate -= 3; // Reduz 3 frames por spawn
+                            }
                         }
                     }
+                    
+                    // Sempre renderizar
+                    this.render();
+                    
+                    // Resetar acumulador
+                    this.frameTimeAccumulator -= targetFrameTime;
                 }
-            
+                
+                this.lastTime = timestamp;
                 requestAnimationFrame(this.gameLoop.bind(this));
             }
 
