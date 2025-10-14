@@ -109,7 +109,7 @@ class Game {
             shootTarget: null,
             moveTarget: null, // Inimigo que o jogador quer atacar (para seguir)
             shootCooldown: 0,
-            maxShootCooldown: 30, // 30 frames = 0.5 segundos
+            maxShootCooldown: 18, // 18 frames = 0.3 segundos
             shootRange: 250, // Range de tiro em pixels
             health: 3, // 3 pontos de vida
             maxHealth: 3,
