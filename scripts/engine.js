@@ -76,6 +76,51 @@ class Game {
         this.startGameButton = document.getElementById('startGameButton');
         this.enemiesGuide = document.getElementById('enemiesGuide');
         
+        // Elementos da tela de seleção de modo
+        this.modeSelectionScreen = document.getElementById('modeSelectionScreen');
+        this.selectedMode = null;
+        
+        // Configurações do modo Grabber
+        this.grabberMode = {
+            active: false,
+            hookCooldown: 0,
+            maxHookCooldown: 120, // 2 segundos
+            hookRange: 400,
+            hookSpeed: 14,
+            hookActive: false,
+            hookProjectile: null
+        };
+        
+        // Elementos do modo Jungler
+        this.junglerGameScreen = document.getElementById('junglerGameScreen');
+        this.healthBarFill = document.getElementById('healthBarFill');
+        this.healthBarText = document.getElementById('healthBarText');
+        this.smiteZone = document.getElementById('smiteZone');
+        this.berserkerImage = document.getElementById('berserkerImage');
+        this.junglerFeedback = document.getElementById('junglerFeedback');
+        this.junglerHits = document.getElementById('junglerHits');
+        this.junglerMisses = document.getElementById('junglerMisses');
+        this.junglerAccuracy = document.getElementById('junglerAccuracy');
+        this.junglerExitBtn = document.getElementById('junglerExitBtn');
+        this.lanerExitBtn = document.getElementById('lanerExitBtn');
+        this.fastTargetValue = document.getElementById('fastTargetValue');
+        this.lightningEffect = document.getElementById('lightning');
+        this.dragonGlow = document.getElementById('dragonGlow');
+        
+        // Estado do mini-game Jungler
+        this.junglerGame = {
+            active: false,
+            maxHealth: 3500,
+            currentHealth: 3500,
+            drainSpeed: 1,
+            smiteThreshold: 0,
+            targetValue: 450,
+            hits: 0,
+            misses: 0,
+            canSmite: true,
+            animationFrame: null
+        };
+        
         this.gameStarted = false;
         this.gameOver = false;
         this.score = 0;
@@ -151,6 +196,14 @@ class Game {
         this.playerImageLoaded = false;
         this.playerImage.onload = () => {
             this.playerImageLoaded = true;
+        };
+        
+        // Carregar imagem do Grabber (modo especial)
+        this.grabberImage = new Image();
+        this.grabberImage.src = './images/grabber.png';
+        this.grabberImageLoaded = false;
+        this.grabberImage.onload = () => {
+            this.grabberImageLoaded = true;
         };
         
         // Carregar imagens dos inimigos
@@ -432,6 +485,52 @@ class Game {
         this.validateEnemySettings();
     }
     
+    useGrabberHook() {
+        // Verificar se está em cooldown
+        if (this.grabberMode.hookCooldown > 0) {
+            return;
+        }
+        
+        // Verificar se já tem um hook ativo
+        if (this.grabberMode.hookActive) {
+            return;
+        }
+        
+        // Usar posição do cursor
+        const mouseX = this.cursor.x;
+        const mouseY = this.cursor.y;
+        
+        if (!mouseX || !mouseY) {
+            return;
+        }
+        
+        // Calcular direção
+        const dx = mouseX - this.player.x;
+        const dy = mouseY - this.player.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < 10) return;
+        
+        const dirX = dx / distance;
+        const dirY = dy / distance;
+        
+        // Criar projétil do hook
+        this.grabberMode.hookProjectile = {
+            x: this.player.x,
+            y: this.player.y,
+            startX: this.player.x,
+            startY: this.player.y,
+            vx: dirX * this.grabberMode.hookSpeed,
+            vy: dirY * this.grabberMode.hookSpeed,
+            maxDistance: this.grabberMode.hookRange,
+            returning: false,
+            hitEnemy: null
+        };
+        
+        this.grabberMode.hookActive = true;
+        this.grabberMode.hookCooldown = this.grabberMode.maxHookCooldown;
+    }
+    
     useSpecialAbility() {
         // Verificar se a habilidade está em cooldown
         if (this.specialAbility.cooldown > 0) {
@@ -544,6 +643,126 @@ class Game {
         // Parar movimento atual
         this.player.isMoving = false;
         this.player.isShooting = false;
+    }
+    
+    updateGrabberHook() {
+        // Atualizar cooldown
+        if (this.grabberMode.hookCooldown > 0) {
+            this.grabberMode.hookCooldown--;
+        }
+        
+        if (!this.grabberMode.hookActive || !this.grabberMode.hookProjectile) {
+            return;
+        }
+        
+        const hook = this.grabberMode.hookProjectile;
+        
+        if (!hook.returning) {
+            // Hook indo
+            hook.x += hook.vx;
+            hook.y += hook.vy;
+            
+            // Verificar dist\u00e2ncia m\u00e1xima
+            const distFromStart = Math.sqrt(
+                (hook.x - hook.startX) ** 2 + (hook.y - hook.startY) ** 2
+            );
+            
+            if (distFromStart >= hook.maxDistance) {
+                hook.returning = true;
+                return;
+            }
+            
+            // Verificar colis\u00e3o com inimigos
+            for (let i = this.enemies.length - 1; i >= 0; i--) {
+                const enemy = this.enemies[i];
+                const dx = hook.x - enemy.x;
+                const dy = hook.y - enemy.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist < enemy.size + 10) {
+                    // Acertou o inimigo
+                    hook.hitEnemy = enemy;
+                    hook.returning = true;
+                    break;
+                }
+            }
+        } else {
+            // Hook voltando
+            if (hook.hitEnemy) {
+                // Puxar inimigo junto
+                const dx = this.player.x - hook.hitEnemy.x;
+                const dy = this.player.y - hook.hitEnemy.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist > 30) {
+                    hook.hitEnemy.x += (dx / dist) * this.grabberMode.hookSpeed;
+                    hook.hitEnemy.y += (dy / dist) * this.grabberMode.hookSpeed;
+                    hook.x = hook.hitEnemy.x;
+                    hook.y = hook.hitEnemy.y;
+                } else {
+                    // Chegou perto do jogador - matar inimigo
+                    const index = this.enemies.indexOf(hook.hitEnemy);
+                    if (index > -1) {
+                        hook.hitEnemy.beingPulled = false; // Remover flag antes de matar
+                        this.enemies.splice(index, 1);
+                        this.score++;
+                        this.scoreElement.textContent = this.score;
+                        this.enemyCountElement.textContent = this.enemies.length;
+                    }
+                    this.grabberMode.hookActive = false;
+                    this.grabberMode.hookProjectile = null;
+                }
+            } else {
+                // Voltar sem inimigo
+                const dx = this.player.x - hook.x;
+                const dy = this.player.y - hook.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist > 20) {
+                    hook.x += (dx / dist) * this.grabberMode.hookSpeed;
+                    hook.y += (dy / dist) * this.grabberMode.hookSpeed;
+                } else {
+                    this.grabberMode.hookActive = false;
+                    this.grabberMode.hookProjectile = null;
+                }
+            }
+        }
+    }
+    
+    drawGrabberHook() {
+        if (!this.grabberMode.hookActive || !this.grabberMode.hookProjectile) {
+            return;
+        }
+        
+        const hook = this.grabberMode.hookProjectile;
+        
+        this.ctx.save();
+        
+        // Desenhar corrente/corda
+        this.ctx.strokeStyle = '#FFD700';
+        this.ctx.lineWidth = 3;
+        this.ctx.shadowColor = '#FFD700';
+        this.ctx.shadowBlur = 10;
+        
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.player.x, this.player.y);
+        this.ctx.lineTo(hook.x, hook.y);
+        this.ctx.stroke();
+        
+        // Desenhar gancho
+        this.ctx.fillStyle = '#FFD700';
+        this.ctx.beginPath();
+        this.ctx.arc(hook.x, hook.y, 8, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // Anel externo
+        this.ctx.strokeStyle = '#FFF';
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.arc(hook.x, hook.y, 8, 0, Math.PI * 2);
+        this.ctx.stroke();
+        
+        this.ctx.restore();
     }
     
     updateSpecialAbilities() {
@@ -1151,38 +1370,43 @@ class Game {
         this.ctx.lineWidth = 2;
         this.ctx.stroke();
         
+        // Usar cooldown do hook se estiver no modo Grabber
+        const cooldown = this.grabberMode.active ? this.grabberMode.hookCooldown : this.specialAbility.cooldown;
+        const maxCooldown = this.grabberMode.active ? this.grabberMode.maxHookCooldown : this.specialAbility.maxCooldown;
+        const abilityColor = this.grabberMode.active ? '#FFD700' : '#00FF00';
+        
         // Texto Q
-        this.ctx.fillStyle = this.specialAbility.cooldown > 0 ? '#666' : '#FFF';
+        this.ctx.fillStyle = cooldown > 0 ? '#666' : '#FFF';
         this.ctx.font = 'bold 18px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
         this.ctx.fillText('Q', x, y);
         
         // Se em cooldown, desenhar progresso
-        if (this.specialAbility.cooldown > 0) {
-            const progress = 1 - (this.specialAbility.cooldown / this.specialAbility.maxCooldown);
+        if (cooldown > 0) {
+            const progress = 1 - (cooldown / maxCooldown);
             const startAngle = -Math.PI / 2; // Começar do topo
             const endAngle = startAngle + (progress * Math.PI * 2);
             
             // Arco de progresso
             this.ctx.beginPath();
             this.ctx.arc(x, y, radius - 3, startAngle, endAngle);
-            this.ctx.strokeStyle = '#00FF00';
+            this.ctx.strokeStyle = abilityColor;
             this.ctx.lineWidth = 4;
             this.ctx.stroke();
             
             // Texto do tempo restante
-            const timeLeft = Math.ceil(this.specialAbility.cooldown / 60); // Converter frames para segundos
+            const timeLeft = Math.ceil(cooldown / 60); // Converter frames para segundos
             this.ctx.fillStyle = '#FFF';
             this.ctx.font = 'bold 10px Arial';
             this.ctx.fillText(timeLeft + 's', x, y + 15);
         } else {
             // Disponível - efeito brilhante
-            this.ctx.shadowColor = '#00FF00';
+            this.ctx.shadowColor = abilityColor;
             this.ctx.shadowBlur = 10;
             this.ctx.beginPath();
             this.ctx.arc(x, y, radius - 3, 0, Math.PI * 2);
-            this.ctx.strokeStyle = '#00FF00';
+            this.ctx.strokeStyle = abilityColor;
             this.ctx.lineWidth = 3;
             this.ctx.stroke();
         }
@@ -1353,9 +1577,16 @@ class Game {
                 this.toggleEnemiesMenu();
             }
             
+            // Smite no modo Jungler
+            if ((e.key === 'f' || e.key === 'F') && this.junglerGame.active) {
+                this.attemptSmite();
+            }
+            
             // Habilidade especial com Q
             if (e.key === 'q' || e.key === 'Q') {
-                if (this.gameStarted && !this.gameOver) {
+                if (this.grabberMode.active && !this.gameOver) {
+                    this.useGrabberHook();
+                } else if (this.gameStarted && !this.gameOver) {
                     this.useSpecialAbility();
                 }
             }
@@ -1388,6 +1619,28 @@ class Game {
         
         // Carregar configurações salvas de inimigos
         this.loadEnemySettings();
+        
+        // Event listeners para os cards de modo
+        const modeCards = document.querySelectorAll('.mode-card');
+        modeCards.forEach(card => {
+            card.addEventListener('click', () => {
+                if (card.classList.contains('active')) {
+                    const mode = card.getAttribute('data-mode');
+                    this.selectedMode = mode;
+                    this.hideModeSelection();
+                }
+            });
+        });
+        
+        // Event listener para sair do modo Jungler
+        this.junglerExitBtn.addEventListener('click', () => {
+            this.exitJunglerMode();
+        });
+        
+        // Event listener para sair do modo Laner
+        this.lanerExitBtn.addEventListener('click', () => {
+            this.exitLanerMode();
+        });
         
         // Desabilitar clique direito em toda a página
         document.addEventListener('contextmenu', (e) => {
@@ -1472,7 +1725,7 @@ class Game {
                     if (skipAnimation) {
                         // Pular animação se já temos nickname salvo
                         this.welcomeScreen.style.display = 'none';
-                        this.showMainMenu();
+                        this.showModeSelection();
                     } else {
                         // Animação normal
                         this.welcomeScreen.style.opacity = '0';
@@ -1481,9 +1734,39 @@ class Game {
                         
                         setTimeout(() => {
                             this.welcomeScreen.style.display = 'none';
-                            this.showMainMenu();
+                            this.showModeSelection();
                         }, 500);
                     }
+                }
+                
+                showModeSelection() {
+                    this.modeSelectionScreen.style.display = 'flex';
+                    this.modeSelectionScreen.style.opacity = '0';
+                    this.modeSelectionScreen.style.transform = 'scale(0.9)';
+                    this.modeSelectionScreen.style.transition = 'all 0.5s ease';
+                    
+                    setTimeout(() => {
+                        this.modeSelectionScreen.style.opacity = '1';
+                        this.modeSelectionScreen.style.transform = 'scale(1)';
+                    }, 100);
+                }
+                
+                hideModeSelection() {
+                    this.modeSelectionScreen.style.opacity = '0';
+                    this.modeSelectionScreen.style.transform = 'scale(0.9)';
+                    
+                    setTimeout(() => {
+                        this.modeSelectionScreen.style.display = 'none';
+                        
+                        // Iniciar o jogo apropriado baseado no modo selecionado
+                        if (this.selectedMode === 'laner') {
+                            this.showMainMenu();
+                        } else if (this.selectedMode === 'jungler') {
+                            this.startJunglerMode();
+                        } else if (this.selectedMode === 'grabber') {
+                            this.startGrabberMode();
+                        }
+                    }, 500);
                 }
                 
                 showMainMenu() {
@@ -1617,7 +1900,7 @@ class Game {
                         if (shootDistanceSquared <= shootRangeSquared) {
                             // CASO A: Inimigo dentro do range - atirar imediatamente
                             this.player.isMoving = false;
-                            this.player.isShooting = true;
+                            this.player.isShooting = !this.grabberMode.active; // Desativar animação em modo grabber
                             this.player.shootTarget = enemy;
                             this.player.moveTarget = null; // Cancelar movimento
                             
@@ -1744,7 +2027,7 @@ class Game {
                         if (distanceToEnemy <= this.player.shootRange * 0.9) {
                             // Chegou próximo o suficiente - começar a atirar
                             this.player.isMoving = false;
-                            this.player.isShooting = true;
+                            this.player.isShooting = !this.grabberMode.active; // Desativar animação em modo grabber
                             this.player.shootTarget = enemy;
                             this.player.moveTarget = null;
                             
@@ -2046,6 +2329,12 @@ class Game {
                         const distance = Math.sqrt((bullet.x - this.player.x) ** 2 + (bullet.y - this.player.y) ** 2);
                         
                         if (distance < bullet.size + this.player.size) {
+                            // Ignorar dano se estiver no modo Grabber (invencível)
+                            if (this.grabberMode.active) {
+                                bullet.active = false; // Remover a bala mas não causar dano
+                                break;
+                            }
+                            
                             // Bala atingiu jogador
                             bullet.active = false;
                             this.player.health--;
@@ -2153,6 +2442,11 @@ class Game {
                 }
                 
                 determineEnemyType() {
+                    // No modo Grabber, apenas mages
+                    if (this.grabberMode.active) {
+                        return 'mage';
+                    }
+                    
                     // Filtrar apenas tipos habilitados
                     const availableTypes = [];
                     
@@ -2348,10 +2642,14 @@ class Game {
                             };
                             
                         case 'mage':
+                            const mageSpeed = this.grabberMode.active ? 
+                                (2.5 + Math.random() * 1.5) : // Velocidade alta no modo Grabber
+                                (0.8 + Math.random() * 0.4) * (1 + aggressiveness * 0.3);
+                            
                             return {
                                 ...baseStats,
                                 size: 18,
-                                speed: (0.8 + Math.random() * 0.4) * (1 + aggressiveness * 0.3),
+                                speed: mageSpeed,
                                 health: 3,
                                 maxHealth: 3,
                                 maxShootCooldown: Math.max(80, 120 - aggressiveness * 20),
@@ -2361,7 +2659,12 @@ class Game {
                                 bulletSize: 4,
                                 bulletColor: '#66aaff',
                                 multiShot: true,
-                                shotCount: 3
+                                shotCount: 3,
+                                // Movimento aleat\u00f3rio no modo Grabber
+                                randomMovement: this.grabberMode.active,
+                                randomMoveTimer: 0,
+                                randomMoveDirection: { x: 0, y: 0 },
+                                canShoot: !this.grabberMode.active // N\u00e3o atirar no modo Grabber
                             };
                             
                         default:
@@ -2410,6 +2713,16 @@ class Game {
                     
                     // Verificar colisões com o player
                     this.enemies.forEach(enemy => {
+                        // Ignorar colisão se o inimigo está sendo puxado pelo hook
+                        if (enemy.beingPulled) {
+                            return;
+                        }
+                        
+                        // Ignorar colisão se estiver no modo Grabber (invencível)
+                        if (this.grabberMode.active) {
+                            return;
+                        }
+                        
                         const dx = this.player.x - enemy.x;
                         const dy = this.player.y - enemy.y;
                         const distance = Math.sqrt(dx * dx + dy * dy);
@@ -2525,6 +2838,11 @@ class Game {
                 }
                 
                 handleEnemyShooting(enemy, distanceToPlayer) {
+                    // N\u00e3o atirar se for modo grabber
+                    if (this.grabberMode.active || enemy.canShoot === false) {
+                        return;
+                    }
+                    
                     switch (enemy.type) {
                         case 'tank':
                         case 'berserker':
@@ -2580,6 +2898,31 @@ class Game {
                 }
                 
                 moveEnemy(enemy, distanceToPlayer) {
+                    // Movimento aleat\u00f3rio para mages no modo Grabber
+                    if (enemy.randomMovement && this.grabberMode.active) {
+                        enemy.randomMoveTimer = enemy.randomMoveTimer || 0;
+                        enemy.randomMoveTimer--;
+                        
+                        if (enemy.randomMoveTimer <= 0 || !enemy.randomMoveDirection.x) {
+                            // Novo dire\u00e7\u00e3o aleat\u00f3ria a cada 1-2 segundos
+                            enemy.randomMoveTimer = 60 + Math.random() * 60;
+                            const angle = Math.random() * Math.PI * 2;
+                            enemy.randomMoveDirection = {
+                                x: Math.cos(angle),
+                                y: Math.sin(angle)
+                            };
+                        }
+                        
+                        enemy.x += enemy.randomMoveDirection.x * enemy.speed;
+                        enemy.y += enemy.randomMoveDirection.y * enemy.speed;
+                        
+                        // Manter dentro dos limites
+                        enemy.x = Math.max(enemy.size, Math.min(this.canvas.width - enemy.size, enemy.x));
+                        enemy.y = Math.max(enemy.size, Math.min(this.canvas.height - enemy.size, enemy.y));
+                        
+                        return;
+                    }
+                    
                     let dx = this.player.x - enemy.x;
                     let dy = this.player.y - enemy.y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
@@ -2959,7 +3302,12 @@ class Game {
                     this.ctx.shadowOffsetX = 3;
                     this.ctx.shadowOffsetY = 3;
                     
-                    if (this.playerImageLoaded) {
+                    // Decidir qual imagem usar baseado no modo
+                    const useGrabberImage = this.grabberMode.active && this.grabberImageLoaded;
+                    const currentImage = useGrabberImage ? this.grabberImage : this.playerImage;
+                    const imageLoaded = useGrabberImage ? this.grabberImageLoaded : this.playerImageLoaded;
+                    
+                    if (imageLoaded) {
                         // Desenhar imagem do personagem com rotação para apontar na direção do clique
                         this.ctx.translate(this.player.x, this.player.y);
                         
@@ -2971,7 +3319,7 @@ class Game {
                         // Desenhar a imagem centralizada com rotação
                         const imageSize = this.player.size * 2;
                         this.ctx.drawImage(
-                            this.playerImage, 
+                            currentImage, 
                             -imageSize / 2, 
                             -imageSize / 2, 
                             imageSize, 
@@ -4179,6 +4527,7 @@ class Game {
                         this.drawMagicalImpactEffects(); // Efeitos de impacto
                         this.drawDashEffects(); // Efeitos de dash
                         this.drawSpecialAbilities(); // Desenhar habilidades especiais
+                        this.drawGrabberHook(); // Desenhar hook do modo Grabber
                         this.drawPlayer();
                         this.drawSpecialAbilityCooldown(); // Indicador de cooldown do Q
                         this.drawDashAbilityCooldown(); // Indicador de cooldown do E
@@ -4212,6 +4561,7 @@ class Game {
                             this.updateBullets();
                             this.updateEnemyBullets();
                             this.updateSpecialAbilities();
+                            this.updateGrabberHook(); // Hook do modo Grabber
                             this.updateSpecialAbilityCastEffects(); // Novo efeito
                             this.updateMagicalImpactEffects(); // Efeitos de impacto
                             this.updateDashEffects(); // Efeitos de dash
@@ -4253,6 +4603,315 @@ class Game {
                     
         this.lastTime = timestamp;
         requestAnimationFrame(this.gameLoop.bind(this));
+    }
+    
+    // ========== MODO JUNGLER - MINI-GAME DE TIMING ==========
+    
+    startJunglerMode() {
+        this.junglerGameScreen.style.display = 'flex';
+        this.junglerGameScreen.style.opacity = '0';
+        this.junglerGameScreen.style.transition = 'opacity 0.5s ease';
+        
+        setTimeout(() => {
+            this.junglerGameScreen.style.opacity = '1';
+        }, 100);
+        
+        // Resetar estat\u00edsticas
+        this.junglerGame.hits = 0;
+        this.junglerGame.misses = 0;
+        this.updateJunglerStats();
+        
+        // Iniciar primeira rodada
+        this.startJunglerRound();
+    }
+    
+    exitJunglerMode() {
+        this.junglerGame.active = false;
+        if (this.junglerGame.animationFrame) {
+            cancelAnimationFrame(this.junglerGame.animationFrame);
+        }
+        
+        this.junglerGameScreen.style.opacity = '0';
+        setTimeout(() => {
+            this.junglerGameScreen.style.display = 'none';
+            this.showModeSelection();
+        }, 500);
+    }
+    
+    exitLanerMode() {
+        // Parar o jogo
+        this.gameStarted = false;
+        this.gameOver = false;
+        
+        // Limpar elementos do jogo
+        this.enemies = [];
+        this.bullets = [];
+        this.enemyBullets = [];
+        
+        // Esconder UI do jogo
+        this.uiOverlay.style.display = 'none';
+        this.instructionsPanel.style.display = 'none';
+        this.canvas.classList.remove('game-active');
+        
+        // Desativar modo grabber se estava ativo
+        this.grabberMode.active = false;
+        
+        // Mostrar seleção de modo novamente
+        this.showModeSelection();
+    }
+    
+    startGrabberMode() {
+        this.grabberMode.active = true;
+        this.showMainMenu();
+    }
+    
+    startJunglerRound() {
+        // Resetar sa\u00fade
+        this.junglerGame.currentHealth = this.junglerGame.maxHealth;
+        this.junglerGame.canSmite = true;
+        this.junglerGame.active = true;
+        
+        // Velocidade aleat\u00f3ria de drenagem (entre 2.5 e 5.5 HP por frame - mais r\u00e1pido)
+        this.junglerGame.drainSpeed = 2.5 + Math.random() * 3;
+        
+        // Gerar valor alvo aleat\u00f3rio entre 450, 900 e 1200
+        const smiteValues = [450, 900, 1200];
+        this.junglerGame.targetValue = smiteValues[Math.floor(Math.random() * smiteValues.length)];
+        this.fastTargetValue.textContent = this.junglerGame.targetValue;
+        
+        // Zona de smite aleat\u00f3ria pr\u00f3xima ao final (entre 5% e 15% da vida)
+        const minThreshold = 50; // 5%
+        const maxThreshold = 150; // 15%
+        this.junglerGame.smiteThreshold = minThreshold + Math.random() * (maxThreshold - minThreshold);
+        
+        // Atualizar posi\u00e7\u00e3o visual da zona de smite
+        const zonePercent = (this.junglerGame.smiteThreshold / this.junglerGame.maxHealth) * 100;
+        this.smiteZone.style.width = `${zonePercent}%`;
+        
+        // Iniciar anima\u00e7\u00e3o de drenagem
+        this.drainHealth();
+    }
+    
+    drainHealth() {
+        if (!this.junglerGame.active) return;
+        
+        this.junglerGame.currentHealth -= this.junglerGame.drainSpeed;
+        
+        // Verificar se chegou a zero
+        if (this.junglerGame.currentHealth <= 0) {
+            this.junglerGame.currentHealth = 0;
+            this.handleMissedSmite();
+            return;
+        }
+        
+        // Atualizar UI
+        this.updateHealthBar();
+        
+        // Verificar se está no range de smite (±150)
+        const currentValue = Math.ceil(this.junglerGame.currentHealth);
+        const targetValue = this.junglerGame.targetValue;
+        const difference = Math.abs(currentValue - targetValue);
+        
+        if (difference <= 150 && this.dragonGlow) {
+            this.dragonGlow.classList.add('active');
+        } else if (this.dragonGlow) {
+            this.dragonGlow.classList.remove('active');
+        }
+        
+        // Continuar drenagem
+        this.junglerGame.animationFrame = requestAnimationFrame(() => this.drainHealth());
+    }
+    
+    updateHealthBar() {
+        const healthPercent = (this.junglerGame.currentHealth / this.junglerGame.maxHealth) * 100;
+        this.healthBarFill.style.width = `${healthPercent}%`;
+        this.healthBarText.textContent = `${Math.ceil(this.junglerGame.currentHealth)} / ${this.junglerGame.maxHealth}`;
+        
+        // Mudar cor da barra quando est\u00e1 pr\u00f3xima do fim
+        if (this.junglerGame.currentHealth <= this.junglerGame.smiteThreshold) {
+            this.healthBarFill.style.background = 'linear-gradient(90deg, #FFD700, #FFA500)';
+        } else if (this.junglerGame.currentHealth <= 300) {
+            this.healthBarFill.style.background = 'linear-gradient(90deg, #ff9800, #ff5722)';
+        } else {
+            this.healthBarFill.style.background = 'linear-gradient(90deg, #4CAF50, #45a049)';
+        }
+    }
+    
+    attemptSmite() {
+        if (!this.junglerGame.canSmite || !this.junglerGame.active) return;
+
+        // Parar drenagem imediatamente
+        this.junglerGame.canSmite = false;
+        this.junglerGame.active = false;
+        
+        // Cancelar anima\u00e7\u00e3o de drenagem
+        if (this.junglerGame.animationFrame) {
+            cancelAnimationFrame(this.junglerGame.animationFrame);
+        }
+
+        // Executar anima\u00e7\u00e3o de lightning vermelho
+        if (this.lightningEffect) {
+            this.lightningEffect.stop();
+            this.lightningEffect.style.opacity = '1';
+            this.lightningEffect.play();
+            
+            setTimeout(() => {
+                this.lightningEffect.style.opacity = '0';
+            }, 600);
+        }
+
+        // Calcular a diferen\u00e7a entre o valor atual da vida e o valor alvo
+        const currentValue = Math.ceil(this.junglerGame.currentHealth);
+        const targetValue = this.junglerGame.targetValue;
+        const difference = targetValue - currentValue; // Diferen\u00e7a com sinal
+        
+        // Sistema de precis\u00e3o:
+        // Se apertou ANTES (currentValue > targetValue): ERRO
+        // Se apertou DEPOIS mas dentro de -50: PERFEITO
+        // Se apertou DEPOIS mas dentro de -150: BOM
+        // Se apertou DEPOIS com diferen\u00e7a > 150: ERRO
+        
+        if (currentValue > targetValue) {
+            // Apertou antes do valor necess\u00e1rio - ERRO
+            this.handleFailedSmite(Math.abs(difference), currentValue, targetValue);
+        } else if (difference <= 50) {
+            // Apertou depois, muito pr\u00f3ximo - PERFEITO
+            this.handlePerfectSmite(Math.abs(difference));
+        } else if (difference <= 150) {
+            // Apertou depois, no range aceit\u00e1vel - BOM
+            this.handleGoodSmite(Math.abs(difference));
+        } else {
+            // Apertou depois, mas muito tarde - ERRO
+            this.handleFailedSmite(Math.abs(difference), currentValue, targetValue);
+        }
+    }
+    
+    handlePerfectSmite(difference) {
+        this.junglerGame.hits++;
+        
+        // Feedback visual
+        if (this.berserkerImage) {
+            this.berserkerImage.classList.add('hit-success');
+        }
+        this.showFeedback(`PERFEITO! (\u00b1${difference})`, true);
+
+        // Resetar vida para zero com efeito
+        this.junglerGame.currentHealth = 0;
+        this.updateHealthBar();
+
+        setTimeout(() => {
+            if (this.berserkerImage) {
+                this.berserkerImage.classList.remove('hit-success');
+            }
+            this.updateJunglerStats();
+            
+            // Iniciar nova rodada ap\u00f3s 1.5 segundos
+            setTimeout(() => {
+                this.startJunglerRound();
+            }, 1500);
+        }, 500);
+    }
+    
+    handleGoodSmite(difference) {
+        this.junglerGame.hits++;
+        
+        // Feedback visual
+        if (this.berserkerImage) {
+            this.berserkerImage.classList.add('hit-success');
+        }
+        this.showFeedback(`BOM! (\u00b1${difference})`, true);
+
+        // Resetar vida para zero com efeito
+        this.junglerGame.currentHealth = 0;
+        this.updateHealthBar();
+
+        setTimeout(() => {
+            if (this.berserkerImage) {
+                this.berserkerImage.classList.remove('hit-success');
+            }
+            this.updateJunglerStats();
+
+            // Iniciar nova rodada ap\u00f3s 1.5 segundos
+            setTimeout(() => {
+                this.startJunglerRound();
+            }, 1500);
+        }, 500);
+    }
+
+    handleFailedSmite(difference, currentValue, targetValue) {
+        this.junglerGame.misses++;
+
+        // Feedback visual
+        if (this.berserkerImage) {
+            this.berserkerImage.classList.add('hit-fail');
+        }
+        let message = `ERROU! (${currentValue} vs ${targetValue})`;
+        if (currentValue > targetValue) {
+            message = `MUITO CEDO! (\u00b1${difference})`;
+        } else {
+            message = `MUITO TARDE! (\u00b1${difference})`;
+        }
+        
+        this.showFeedback(message, false);
+
+        setTimeout(() => {
+            if (this.berserkerImage) {
+                this.berserkerImage.classList.remove('hit-fail');
+            }
+            this.updateJunglerStats();
+
+            // Iniciar nova rodada ap\u00f3s 1.5 segundos
+            setTimeout(() => {
+                this.startJunglerRound();
+            }, 1500);
+        }, 500);
+    }
+    
+    handleMissedSmite() {
+        // Vida chegou a zero sem smite
+        this.junglerGame.misses++;
+        this.junglerGame.active = false;
+        
+        if (this.berserkerImage) {
+            this.berserkerImage.classList.add('hit-fail');
+        }
+        this.showFeedback('SEM SMITE!', false);
+        
+        setTimeout(() => {
+            if (this.berserkerImage) {
+                this.berserkerImage.classList.remove('hit-fail');
+            }
+            this.updateJunglerStats();
+            
+            // Iniciar nova rodada ap\u00f3s 1.5 segundos
+            setTimeout(() => {
+                this.startJunglerRound();
+            }, 1500);
+        }, 500);
+    }
+    
+    showFeedback(message, isSuccess) {
+        this.junglerFeedback.textContent = message;
+        this.junglerFeedback.className = 'jungler-feedback';
+        
+        if (isSuccess) {
+            this.junglerFeedback.classList.add('show-success');
+        } else {
+            this.junglerFeedback.classList.add('show-fail');
+        }
+        
+        setTimeout(() => {
+            this.junglerFeedback.className = 'jungler-feedback';
+        }, 1000);
+    }
+    
+    updateJunglerStats() {
+        this.junglerHits.textContent = this.junglerGame.hits;
+        this.junglerMisses.textContent = this.junglerGame.misses;
+        
+        const total = this.junglerGame.hits + this.junglerGame.misses;
+        const accuracy = total > 0 ? ((this.junglerGame.hits / total) * 100).toFixed(1) : 0;
+        this.junglerAccuracy.textContent = `${accuracy}%`;
     }
 }
 

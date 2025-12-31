@@ -4,22 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KitingBack - Treine seu kiting</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="./styles/index.css">
 </head>
 <body class="dark-mode">
-    <button class="dark-mode-toggle" id="darkModeToggle">☀️</button>
+    <button class="dark-mode-toggle" id="darkModeToggle"><i class="fas fa-sun"></i></button>
     
     <!-- Botão para abrir guia dos inimigos no topo da tela -->
     <button class="enemies-guide-button" id="enemiesGuideButton">
         <span class="guide-text">Guia dos Inimigos</span>
-        <span class="guide-arrow">▲</span>
+        <span class="guide-arrow"><i class="fas fa-chevron-up"></i></span>
     </button>
     
     <!-- Menu superior dos inimigos -->
     <div class="enemies-menu-container" id="enemiesMenuContainer">
         <div class="enemies-menu-toggle" id="enemiesMenuToggle">
             <span class="menu-title">Guia dos Inimigos</span>
-            <span class="arrow-icon" id="arrowIcon">▼</span>
+            <span class="arrow-icon" id="arrowIcon"><i class="fas fa-chevron-down"></i></span>
         </div>
         
         <div class="enemies-menu-content" id="enemiesMenuContent">
@@ -91,28 +92,28 @@
                 
                 <div class="tutorial-section">
                     <h2>Como Jogar</h2>
-                    <div class="tutorial-steps">
+                    <div class="tutorial-steps" id="tutorialSteps">
                         <div class="step">
                             <div class="step-number">1</div>
                             <div class="step-content">
-                                <h3>Movimento</h3>
-                                <p>Botão direito para mover</p>
+                                <h3>Escolha o Modo</h3>
+                                <p>Selecione entre Laner ou Grabber</p>
                             </div>
                         </div>
                         
                         <div class="step">
                             <div class="step-number">2</div>
                             <div class="step-content">
-                                <h3>Combate</h3>
-                                <p>Botão direito nos inimigos para atirar</p>
+                                <h3>Aprenda as Habilidades</h3>
+                                <p>Cada modo tem mecânicas únicas</p>
                             </div>
                         </div>
                         
                         <div class="step">
                             <div class="step-number">3</div>
                             <div class="step-content">
-                                <h3>Sobrevivência</h3>
-                                <p>Desvie dos tiros vermelhos (3 = morte)</p>
+                                <h3>Sobreviva</h3>
+                                <p>Elimine inimigos e aumente sua pontuação</p>
                             </div>
                         </div>
                     </div>
@@ -122,9 +123,98 @@
             </div>
         </div>
         
+        <!-- Tela de Seleção de Modo -->
+        <div class="mode-selection-screen" id="modeSelectionScreen">
+            <div class="mode-container">
+                <h1>Selecione o Modo de Treino</h1>
+                <p class="mode-subtitle">Escolha o modo que melhor se adapta ao seu treino</p>
+                
+                <div class="mode-cards">
+                    <div class="mode-card active" data-mode="jungler">
+                        <div class="mode-icon"><i class="fas fa-dragon"></i></div>
+                        <h2>JUNGLER</h2>
+                        <p class="mode-description">Treine rotação de jungle e objetivos</p>
+                        <div class="mode-status ready">DISPONÍVEL</div>
+                    </div>
+                    
+                    <div class="mode-card active" data-mode="laner">
+                        <div class="mode-icon"><i class="fas fa-chess-knight"></i></div>
+                        <h2>LANER</h2>
+                        <p class="mode-description">Aprimore seu kiting e mecânica de lane</p>
+                        <div class="mode-status ready">DISPONÍVEL</div>
+                    </div>
+                    
+                    <div class="mode-card active" data-mode="grabber">
+                        <div class="mode-icon"><i class="fas fa-crosshairs"></i></div>
+                        <h2>GRABBER</h2>
+                        <p class="mode-description">Pratique hooks e skill shots</p>
+                        <div class="mode-status ready">DISPONÍVEL</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tela do Modo Jungler -->
+        <div class="jungler-game-screen" id="junglerGameScreen">
+            <div class="jungler-container">
+                <div class="jungler-header">
+                    <h2>TREINAMENTO DE SMITE</h2>
+                    <div class="jungler-score">
+                        <span>Acertos: <strong id="junglerHits">0</strong></span>
+                        <span>Erros: <strong id="junglerMisses">0</strong></span>
+                        <span>Precisão: <strong id="junglerAccuracy">0%</strong></span>
+                    </div>
+                </div>
+                
+                <div class="health-bar-container">
+                    <div class="health-bar-bg">
+                        <div class="health-bar-fill" id="healthBarFill"></div>
+                        <div class="smite-zone" id="smiteZone"></div>
+                        <div class="health-bar-text" id="healthBarText">3500 / 3500</div>
+                    </div>
+                </div>
+                
+                <div class="berserker-image-container">
+                    <div class="scene">
+                        <!-- Indicador de range de smite -->
+                        <div class="dragon-glow" id="dragonGlow"></div>
+                        
+                        <!-- Dragão -->
+                        <lottie-player
+                            id="dragon"
+                            src="./images/Dragon.json"
+                            loop
+                            autoplay>
+                        </lottie-player>
+
+                        <!-- Raio -->
+                        <lottie-player
+                            id="lightning"
+                            src="./images/Red Lightning.json"
+                        ></lottie-player>
+                    </div>
+                </div>
+                
+                <!-- Elemento lateral com Fast e valor alvo -->
+                <div class="fast-challenge-container" id="fastChallengeContainer">
+                    <div class="fast-icon-wrapper">
+                        <img src="./images/smite.png" alt="Fast" class="fast-icon" style="border-radius:50%;">
+                    </div>
+                    <div class="fast-target-value" id="fastTargetValue">150</div>
+                    <div class="fast-challenge-hint">Aperte F próximo deste valor!</div>
+                </div>
+                
+                <div class="jungler-feedback" id="junglerFeedback"></div>
+                
+                <div class="jungler-buttons-container">
+                    <button class="jungler-exit-btn" id="junglerExitBtn">Sair do Treino</button>
+                </div>
+            </div>
+        </div>
+        
         <!-- Painel de Estatísticas -->
         <div class="ui-overlay" id="uiOverlay" style="display: none;">
-            <h3>📊 Estatísticas</h3>
+            <h3><i class="fas fa-chart-bar"></i> Estatísticas</h3>
             <div>Jogador: <span id="playerName">-</span></div>
             <div>Posição: <span id="position">X: 0, Y: 0</span></div>
             <div>Status: <span id="status">Parado</span></div>
@@ -145,6 +235,18 @@
                 width: 100%;
                 transition: all 0.3s ease;
             " onmouseover="this.style.background='rgba(74, 144, 226, 0.3)'" onmouseout="this.style.background='rgba(74, 144, 226, 0.2)'">Trocar Nick</button>
+            <button id="lanerExitBtn" style="
+                background: rgba(244, 67, 54, 0.2);
+                border: 1px solid rgba(244, 67, 54, 0.3);
+                color: rgba(255, 255, 255, 0.8);
+                padding: 8px 16px;
+                font-size: 12px;
+                border-radius: 4px;
+                cursor: pointer;
+                margin-top: 10px;
+                width: 100%;
+                transition: all 0.3s ease;
+            " onmouseover="this.style.background='rgba(244, 67, 54, 0.3)'" onmouseout="this.style.background='rgba(244, 67, 54, 0.2)'">Sair do Treino</button>
         </div>
         
         <!-- Área do Jogo -->
@@ -167,15 +269,14 @@
         
         <!-- Painel de Instruções -->
         <div class="instructions-panel" id="instructionsPanel" style="display: none;">
-            <h3>🎮 Como Jogar</h3>
-            <p><strong>Movimento:</strong><br>Clique direito para mover</p>
-            <p><strong>Ataque:</strong><br>Clique direito no inimigo para atirar</p>
-            <p><strong>Objetivo:</strong><br>Desvie dos tiros vermelhos!<br>3 tiros = morte</p>
-            <p><strong>Range:</strong><br>Círculo verde = alcance de tiro</p>
-            <p><strong>Upgrade:</strong><br>A cada 10 mortes = mais inimigos</p>
+            <h3><i class="fas fa-gamepad"></i> Como Jogar</h3>
+            <div id="instructionsContent">
+                <!-- Conteúdo será atualizado dinamicamente pelo JavaScript -->
+            </div>
         </div>
     </div>
-
+    
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
     <script src="scripts/engine.js"></script>
 </body>
 </html>
