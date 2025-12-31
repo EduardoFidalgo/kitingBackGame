@@ -19,7 +19,7 @@ body {
 /* Ko-fi Support Button */
 .kofi-button {
     position: fixed;
-    top: 20px;
+    top: 10px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 10000;
@@ -27,8 +27,8 @@ body {
     background: white;
     color: black;
     text-decoration: none;
-    font-weight: 800;
-    font-size: 13px;
+    font-weight: 600;
+    font-size: 20px;
     border-radius: 20px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     transition: all 0.2s ease;
