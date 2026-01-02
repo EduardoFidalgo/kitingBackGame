@@ -57,6 +57,7 @@ class Game {
         this.uiOverlay = document.getElementById('uiOverlay');
         this.instructions = document.getElementById('instructions');
         this.instructionsPanel = document.getElementById('instructionsPanel');
+        this.instructionsContent = document.getElementById('instructionsContent');
         this.gameOverScreen = document.getElementById('gameOver');
         this.restartButton = document.getElementById('restartButton');
         this.positionElement = document.getElementById('position');
@@ -1811,6 +1812,7 @@ class Game {
                     this.gameOverScreen.style.display = 'none';
                     this.uiOverlay.style.display = 'block';
                     this.instructionsPanel.style.display = 'block';
+                    this.updateInstructionsPanel(); // Atualizar instruções baseado no modo
                     this.instructions.style.display = 'none';
                     this.statusElement.textContent = 'Jogo iniciado!';
                     this.scoreElement.textContent = '0';
@@ -4636,6 +4638,32 @@ class Game {
             this.junglerGameScreen.style.display = 'none';
             this.showModeSelection();
         }, 500);
+    }
+    
+    updateInstructionsPanel() {
+        if (!this.instructionsContent) return;
+        
+        let instructionsHTML = '';
+        
+        if (this.selectedMode === 'laner') {
+            instructionsHTML = `
+                <p><i class="fas fa-mouse-pointer"></i> <strong>Movimento:</strong> Clique esquerdo para se mover</p>
+                <p><i class="fas fa-crosshairs"></i> <strong>Ataque:</strong> Clique direito em um inimigo para atacar</p>
+                <p><i class="fas fa-circle"></i> <strong>Range Limitado:</strong> Não saia do círculo verde</p>
+                <p><i class="fas fa-heart"></i> <strong>Vida:</strong> 3 acertos de tiros vermelhos = morte</p>
+                <p><i class="fas fa-trophy"></i> <strong>Objetivo:</strong> Sobreviva e maximize sua pontuação</p>
+            `;
+        } else if (this.selectedMode === 'grabber') {
+            instructionsHTML = `
+                <p><i class="fas fa-mouse-pointer"></i> <strong>Movimento:</strong> Clique esquerdo para se mover</p>
+                <p><i class="fas fa-hand-rock"></i> <strong>Hook:</strong> Clique direito para lançar o gancho</p>
+                <p><i class="fas fa-clock"></i> <strong>Cooldown:</strong> Aguarde o cooldown entre hooks</p>
+                <p><i class="fas fa-circle"></i> <strong>Range Limitado:</strong> Não saia do círculo verde</p>
+                <p><i class="fas fa-trophy"></i> <strong>Objetivo:</strong> Acerte os hooks e elimine inimigos</p>
+            `;
+        }
+        
+        this.instructionsContent.innerHTML = instructionsHTML;
     }
     
     exitLanerMode() {
